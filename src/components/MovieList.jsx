@@ -8,79 +8,123 @@ const MovieList = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); 
+  const [activeView, setActiveView] = useState('nowPlaying');
 
   const api_key = import.meta.env.VITE_API_KEY;
   const baseUrl = 'https://api.themoviedb.org/3';
 
-  // moving fetch function into useEffect to cancel repetition of page load
+  //moving fetchMovies into useEffect to cancel repitition of page load
   useEffect(() => {
-    // fetch const
     const fetchMovies = async () => {
       setLoading(true);
       setError(null);
 
-      const isSearch = searchQuery.trim().length > 0;
-      const endpoint = isSearch
-        ? `/search/movie?api_key=${api_key}&query=${encodeURIComponent(searchQuery)}&page=${page}`
-        : `/movie/now_playing?api_key=${api_key}&page=${page}`;
+      let endpoint;
+      if (activeView === 'searchResults' && searchQuery.trim().length > 0) {
+        endpoint = `/search/movie?api_key=${api_key}&query=${encodeURIComponent(searchQuery)}&page=${page}`;
+      } else {
+        endpoint = `/movie/now_playing?api_key=${api_key}&page=${page}`;
+      }
 
       const url = `${baseUrl}${endpoint}`;
 
-      const response = await fetch(url);
-      if (!response.ok) {
-        setError(`HTTP error: ${response.status}`);
-        setLoading(false);
-        return;
-      }
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
 
-      const data = await response.json();
-      setMovies(prev => (page === 1 ? data.results : [...prev, ...data.results]));
-      setLoading(false);
+        const data = await response.json();
+        setMovies(prev => (page === 1 ? data.results : [...prev, ...data.results]));
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
     };
 
     fetchMovies();
-  }, [page, searchQuery]);
+  }, [page, searchQuery, activeView]); 
 
   // const to handle load more functionality
   const handleLoadMore = () => {
     setPage(prev => prev + 1);
   };
- // search
+
+  // search
   const handleSearchChange = (e) => {
     setSearchInput(e.target.value);
   };
 
+  // const to handle search btn
   const handleSearch = () => {
+    if (searchInput.trim() === '') {
+
+      setActiveView('nowPlaying');
+      setSearchQuery('');
+      setPage(1); 
+      setMovies([]); 
+      return;
+    }
+    setActiveView('searchResults');
     setSearchQuery(searchInput);
     setPage(1);
+    setMovies([]); 
+  };
+
+  //const to handle now-playing btn 
+  const handleNowPlayingClick = () => {
+    setActiveView('nowPlaying');
+    setSearchQuery('');
+    setSearchInput('');
+    setPage(1); 
     setMovies([]);
   };
+
+  //const to handle search-view 
+  const handleSearchViewClick = () => {
+    setActiveView('searchResults'); 
+    if (searchQuery.trim() === '') {
+      setMovies([]);
+    }
+  };
+
 
   if (loading && movies.length === 0) return <p>Loading movies...</p>;
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
 
   return (
     <main>
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search movies..."
-          value={searchInput}
-          onChange={handleSearchChange}
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
+        <div className="view-toggle-buttons">
+            <button className={activeView === 'nowPlaying' ? 'active' : ''} onClick={handleNowPlayingClick}> Now Playing </button>
+            <button className={activeView === 'searchResults' ? 'active' : ''} onClick={handleSearchViewClick} disabled={searchQuery.trim() === '' && activeView !== 'searchResults'}>
+            Search Results
+            </button>
+        </div>
+
+        <div className="search-bar">
+            <input type="text" placeholder="Search movies..." value={searchInput} onChange={handleSearchChange}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                    handleSearch();
+                    }
+                }}
+            />
+            <button onClick={handleSearch}>Search</button>
+        </div>
 
       <div className="movie-grid">
         {movies.length > 0 ? (
           movies.map(movie => <MovieCard key={movie.id} movie={movie} />)
         ) : (
-          <p>No movies found.</p>
+          <p>
+            {loading ? "Loading..." : (activeView === 'searchResults' && searchQuery.trim() === '' ? "Enter a search term to find movies." : "No movies found.")}
+          </p>
         )}
       </div>
 
-      {movies.length > 0 && (
+      {(activeView === 'nowPlaying' || (activeView === 'searchResults' && movies.length > 0)) && (
         <div className="load-more-container">
           <button className="load-more-button" onClick={handleLoadMore} disabled={loading}>
             {loading ? 'Loading...' : 'Load More'}
