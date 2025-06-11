@@ -5,11 +5,8 @@
   text-align: center;
   background-color: #f9f9f9;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  width: 225px;
-  min-height: 350px; /* To make cards roughly same height */
-  display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Pushes footer to bottom */
+  justify-content: space-between; 
   align-items: center;
 }
 
