@@ -5,21 +5,20 @@
   justify-items: center;
   margin-bottom: 30px;
   margin-top: 30px;
-  padding: 30px;
+  padding: 50px;
 }
-
 
 .view-toggle-buttons .active-view-button {
   background-color: #3365fa;
   border-color: #3365fa;
   font-weight: bold;
   color: white;
+  
 }
 
 .view-toggle-buttons .active-view-button:hover {
   background-color: #3365fa;
 }
-
 
 .view-toggle-buttons {
   display: flex;
@@ -27,6 +26,7 @@
   justify-content: center;
   margin-top: 10px;
   margin-bottom: 20px;
+
 }
 
 .view-toggle-buttons button {
@@ -39,6 +39,7 @@
   cursor: pointer;
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   outline: none; 
+  font-family: 'Montserrat', sans-serif;
 }
 
 .view-toggle-buttons button:hover {
@@ -73,6 +74,7 @@
   font-size: 16px;
   flex-grow: 1; 
   max-width: 400px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .search-bar input:focus {
@@ -90,28 +92,12 @@
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .search-bar button:hover {
   background-color: #2a52d0;
 }
-
-.movie-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
-  justify-items: center;
-  margin-bottom: 30px;
-  margin-top: 30px;
-}
-
-.movie-grid + p {
-  text-align: center;
-  font-size: 1.1em;
-  color: #555;
-  margin-top: 20px;
-}
-
 
 .load-more-container {
   text-align: center;
@@ -134,11 +120,6 @@
   background-color: #2a52d0;
 }
 
-.load-more-button:disabled {
-  background-color: #e0e0e0;
-  color: #a0a0a0;
-  cursor: not-allowed;
-}
 
 
 @media (max-width: 400px) {

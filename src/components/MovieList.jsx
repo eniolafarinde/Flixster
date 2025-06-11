@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import MovieCard from './MovieCard.jsx';
+import Modal from './Modal';
 import './MovieList.css';
 
 const MovieList = () => {
@@ -8,13 +9,15 @@ const MovieList = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); 
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeView, setActiveView] = useState('nowPlaying');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
   const api_key = import.meta.env.VITE_API_KEY;
   const baseUrl = 'https://api.themoviedb.org/3';
 
-  //moving fetchMovies into useEffect to cancel repitition of page load
+  // Fetch Movies Effect
   useEffect(() => {
     const fetchMovies = async () => {
       setLoading(true);
@@ -45,7 +48,7 @@ const MovieList = () => {
     };
 
     fetchMovies();
-  }, [page, searchQuery, activeView]); 
+  }, [page, searchQuery, activeView, api_key]);
 
   // const to handle load more functionality
   const handleLoadMore = () => {
@@ -57,66 +60,85 @@ const MovieList = () => {
     setSearchInput(e.target.value);
   };
 
-  // const to handle search btn
   const handleSearch = () => {
     if (searchInput.trim() === '') {
-
       setActiveView('nowPlaying');
       setSearchQuery('');
-      setPage(1); 
-      setMovies([]); 
+      setPage(1);
+      setMovies([]);
       return;
     }
     setActiveView('searchResults');
     setSearchQuery(searchInput);
     setPage(1);
-    setMovies([]); 
+    setMovies([]);
   };
 
-  //const to handle now-playing btn 
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearchQuery('');
+    setActiveView('nowPlaying');
+    setPage(1);
+    setMovies([]);
+  };
+
+ //const to handle now playing button
   const handleNowPlayingClick = () => {
     setActiveView('nowPlaying');
     setSearchQuery('');
     setSearchInput('');
-    setPage(1); 
+    setPage(1);
     setMovies([]);
   };
 
-  //const to handle search-view 
   const handleSearchViewClick = () => {
-    setActiveView('searchResults'); 
+    setActiveView('searchResults');
     if (searchQuery.trim() === '') {
-      setMovies([]);
+      setMovies([]); // Clear movies if no search query is active
     }
   };
 
+  //const to display modal
+  const handleMovieClick = (movie) => {
+    setSelectedMovie(movie);
+    setShowModal(true);
+  };
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedMovie(null);
+  };
 
   if (loading && movies.length === 0) return <p>Loading movies...</p>;
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
 
   return (
     <main>
-        <div className="view-toggle-buttons">
-            <button className={activeView === 'nowPlaying' ? 'active' : ''} onClick={handleNowPlayingClick}> Now Playing </button>
-            <button className={activeView === 'searchResults' ? 'active' : ''} onClick={handleSearchViewClick} disabled={searchQuery.trim() === '' && activeView !== 'searchResults'}>
-            Search Results
-            </button>
-        </div>
+      <div className="view-toggle-buttons">
+        <button className={activeView === 'nowPlaying' ? 'active' : ''} onClick={handleNowPlayingClick}> Now Playing</button>
+        <button className={activeView === 'searchResults' ? 'active' : ''} onClick={handleSearchViewClick} disabled={searchQuery.trim() === '' && activeView !== 'searchResults'}>
+          Search Results
+        </button>
+      </div>
 
-        <div className="search-bar">
-            <input type="text" placeholder="Search movies..." value={searchInput} onChange={handleSearchChange}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                    handleSearch();
-                    }
-                }}
-            />
-            <button onClick={handleSearch}>Search</button>
-        </div>
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Search movies..."
+          value={searchInput}
+          onChange={handleSearchChange}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSearch(); 
+            }
+          }}
+        />
+        <button onClick={handleSearch}>Search</button>
+        <button onClick={handleClearSearch} className="clear-button">Clear</button>
+      </div>
 
       <div className="movie-grid">
         {movies.length > 0 ? (
-          movies.map(movie => <MovieCard key={movie.id} movie={movie} />)
+          movies.map(movie => <MovieCard key={movie.id} movie={movie} onClick={() => handleMovieClick(movie)} />)
         ) : (
           <p>
             {loading ? "Loading..." : (activeView === 'searchResults' && searchQuery.trim() === '' ? "Enter a search term to find movies." : "No movies found.")}
@@ -130,6 +152,10 @@ const MovieList = () => {
             {loading ? 'Loading...' : 'Load More'}
           </button>
         </div>
+      )}
+
+      {showModal && selectedMovie && (
+        <Modal movie={selectedMovie} onClose={handleCloseModal} />
       )}
     </main>
   );
