@@ -13,6 +13,7 @@ const MovieList = () => {
   const [activeView, setActiveView] = useState('nowPlaying');
   const [showModal, setShowModal] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [sortOrder, setSortOrder] = useState('popularity.desc');
 
   const api_key = import.meta.env.VITE_API_KEY;
   const baseUrl = 'https://api.themoviedb.org/3';
@@ -27,11 +28,9 @@ const MovieList = () => {
       if (activeView === 'searchResults' && searchQuery.trim().length > 0) {
         endpoint = `/search/movie?api_key=${api_key}&query=${encodeURIComponent(searchQuery)}&page=${page}`;
       } else {
-        endpoint = `/movie/now_playing?api_key=${api_key}&page=${page}`;
+        endpoint = `/discover/movie?api_key=${api_key}&sort_by=${sortOrder}&page=${page}&primary_release_date.lte=${new Date().toISOString().split('T')[0]}`;
       }
-
       const url = `${baseUrl}${endpoint}`;
-
       try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -48,14 +47,14 @@ const MovieList = () => {
     };
 
     fetchMovies();
-  }, [page, searchQuery, activeView, api_key]);
+  }, [page, searchQuery, activeView, api_key, sortOrder]);
 
-  // const to handle load more functionality
+  //const to handle load more functionality
   const handleLoadMore = () => {
     setPage(prev => prev + 1);
   };
 
-  // search
+  //search 
   const handleSearchChange = (e) => {
     setSearchInput(e.target.value);
   };
@@ -66,6 +65,7 @@ const MovieList = () => {
       setSearchQuery('');
       setPage(1);
       setMovies([]);
+      setSortOrder('popularity.desc');
       return;
     }
     setActiveView('searchResults');
@@ -80,29 +80,37 @@ const MovieList = () => {
     setActiveView('nowPlaying');
     setPage(1);
     setMovies([]);
+    setSortOrder('popularity.desc');
   };
 
- //const to handle now playing button
+
   const handleNowPlayingClick = () => {
     setActiveView('nowPlaying');
     setSearchQuery('');
     setSearchInput('');
     setPage(1);
     setMovies([]);
+    setSortOrder('popularity.desc'); 
   };
 
   const handleSearchViewClick = () => {
     setActiveView('searchResults');
     if (searchQuery.trim() === '') {
-      setMovies([]); // Clear movies if no search query is active
+      setMovies([]);
     }
   };
 
-  //const to display modal
+  const handleSortChange = (e) => {
+    setSortOrder(e.target.value);
+    setPage(1); 
+    setMovies([]);
+  };
+
   const handleMovieClick = (movie) => {
     setSelectedMovie(movie);
     setShowModal(true);
   };
+
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedMovie(null);
@@ -114,26 +122,42 @@ const MovieList = () => {
   return (
     <main>
       <div className="view-toggle-buttons">
-        <button className={activeView === 'nowPlaying' ? 'active' : ''} onClick={handleNowPlayingClick}> Now Playing</button>
+        <button className={activeView === 'nowPlaying' ? 'active' : ''} onClick={handleNowPlayingClick}>
+          Now Playing
+        </button>
         <button className={activeView === 'searchResults' ? 'active' : ''} onClick={handleSearchViewClick} disabled={searchQuery.trim() === '' && activeView !== 'searchResults'}>
           Search Results
         </button>
       </div>
 
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search movies..."
-          value={searchInput}
-          onChange={handleSearchChange}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSearch(); 
-            }
-          }}
-        />
-        <button onClick={handleSearch}>Search</button>
-        <button onClick={handleClearSearch} className="clear-button">Clear</button>
+      <div className="search-and-sort-container">
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search movies..."
+            value={searchInput}
+            onChange={handleSearchChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch();
+              }
+            }}
+          />
+          <button onClick={handleSearch}>Search</button>
+          <button onClick={handleClearSearch} className="clear-button">Clear</button>
+        </div>
+
+        {activeView === 'nowPlaying' && (
+          <div className="sort-controls">
+            <label htmlFor="sort-by">Sort by:</label>
+            <select id="sort-by" value={sortOrder} onChange={handleSortChange}>
+              <option value="popularity.desc">Popularity </option>
+              <option value="original_title.asc">Title (A-Z)</option>
+              <option value="release_date.desc">Release Date (Most Recent)</option>
+              <option value="vote_average.desc">Vote Average (Highest)</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="movie-grid">
