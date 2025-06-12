@@ -114,6 +114,7 @@
   font-size: 18px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .load-more-button:hover {
@@ -162,6 +163,7 @@
     border-color: #3365fa;
     box-shadow: 0 0 0 2px rgba(51, 101, 250, 0.2);
 }
+
 
 @media (max-width: 600px) {
   .search-and-sort-container {
