@@ -20,6 +20,7 @@ const MovieList = () => {
   const [trailerLoading, setTrailerLoading] = useState(false);
   const [trailerError, setTrailerError] = useState(null);
 
+
   const api_key = import.meta.env.VITE_API_KEY;
   const baseUrl = 'https://api.themoviedb.org/3';
 
@@ -40,7 +41,6 @@ const MovieList = () => {
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);
         }
-
         const data = await response.json();
         setMovies(prev => (page === 1 ? data.results : [...prev, ...data.results]));
         setLoading(false);
@@ -48,7 +48,9 @@ const MovieList = () => {
         setError(err.message);
         setLoading(false);
       }
-    }; fetchMovies();
+    };
+
+    fetchMovies();
   }, [page, searchQuery, activeView, api_key, sortOrder]);
 
   const handleLoadMore = () => {
@@ -115,18 +117,26 @@ const MovieList = () => {
     try {
       const response = await fetch(`${baseUrl}/movie/${movie.id}/videos?api_key=${api_key}`);
       if (!response.ok) {
-        throw new Error(`${response.status}`);
+        throw new Error(`Failed to fetch trailers: ${response.status}`);
       }
       const data = await response.json();
       const youtubeTrailers = data.results.filter(
         video => video.site === 'YouTube' && video.type === 'Trailer'
       );
+
       let selectedTrailer = null;
       if (youtubeTrailers.length > 0) {
         selectedTrailer = youtubeTrailers.find(video =>
           video.official === true && video.name.toLowerCase().includes('official trailer')
         );
+        if (!selectedTrailer) {
+          selectedTrailer = youtubeTrailers.find(video => video.official === true);
+        }
+        if (!selectedTrailer) {
+          selectedTrailer = youtubeTrailers[0];
+        }
       }
+
       if (selectedTrailer) {
         setCurrentTrailerKey(selectedTrailer.key);
       } else {
@@ -139,13 +149,14 @@ const MovieList = () => {
       setTrailerLoading(false);
     }
   };
-
   const handleCloseTrailerOverlay = () => {
     setShowTrailerOverlay(false);
     setCurrentTrailerKey(null);
     setTrailerError(null);
     setTrailerLoading(false);
   };
+
+
   if (loading && movies.length === 0) return <p>Loading movies...</p>;
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
 
@@ -194,24 +205,18 @@ const MovieList = () => {
             <MovieCard key={movie.id} movie={movie} onClick={handleMovieCardClick} onWatchTrailerClick={handleWatchTrailerClick} />
           ))
         ) : (
-          <p>
-            {loading ? "Loading..." : (activeView === 'searchResults' && searchQuery.trim() === '' ? "Enter a search term to find movies." : "No movies found.")}
-          </p>
+          <p> {loading ? "Loading..." : (activeView === 'searchResults' && searchQuery.trim() === '' ? "Enter a search term to find movies." : "No movies found.")}</p>
         )}
       </div>
 
       {(activeView === 'nowPlaying' || (activeView === 'searchResults' && movies.length > 0)) && (
         <div className="load-more-container">
-          <button className="load-more-button" onClick={handleLoadMore} disabled={loading}>
-            {loading ? 'Loading...' : 'Load More'}
-          </button>
+          <button className="load-more-button" onClick={handleLoadMore} disabled={loading}> {loading ? 'Loading...' : 'Load More'} </button>
         </div>
       )}
-
       {showModal && selectedMovie && (
         <Modal movie={selectedMovie} onClose={handleCloseModal} api_key={api_key} />
       )}
-
       {showTrailerOverlay && (
         <TrailerOverlay trailerKey={currentTrailerKey} isLoading={trailerLoading} error={trailerError} onClose={handleCloseTrailerOverlay} />
       )}
