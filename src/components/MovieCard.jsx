@@ -21,10 +21,7 @@ const MovieCard = ({ movie, onClick }) => {
 
   return (
     <div className="movie-card" onClick={handleCardClick}>
-      <img
-        src={imageUrl}
-        alt={movie.title}
-        className="movie-poster"
+      <img src={imageUrl} alt={movie.title} className="movie-poster"
         onError={(e) => {
           e.target.onerror = null;
           e.target.src = 'https://via.placeholder.com/185x278?text=Image+Error';
@@ -34,11 +31,7 @@ const MovieCard = ({ movie, onClick }) => {
         <h3>{movie.title}</h3>
         <p>Rating: {movie.vote_average.toFixed(1)}</p>
         <div className="like-button-container">
-          <button 
-            className="like-button" 
-            onClick={handleLikeButtonClick}
-            aria-label={isLiked ? 'Unlike' : 'Like'}
-          >
+          <button className="like-button"  onClick={handleLikeButtonClick} aria-label={isLiked ? 'Unlike' : 'Like'}>
             <span className={`heart-icon ${isLiked ? 'liked' : ''}`}>
               {isLiked ? '♥' : '♡'}
             </span>
