@@ -1,0 +1,16 @@
+.footer {
+    color: #ccc;
+    padding: 20px;
+    text-align: center;
+    font-size: 0.9em;
+    /* position: fixed;  */     
+    width: 100%;
+    text-align: left;  
+    font-weight: bold; 
+    margin-top: auto;
+
+}
+
+.footer p {
+    margin: 5px 0;
+}
