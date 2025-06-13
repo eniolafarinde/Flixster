@@ -120,7 +120,7 @@ const MovieList = () => {
                     </div>
                 )}
                 {showModal && selectedMovie && (
-                    <Modal movie={selectedMovie} onClose={() => setShowModal(false)} api_key={api_key} />
+                    <Modal movie={selectedMovie} onClose={() => setShowModal(false)} api_key={api_key}/>
                 )}
                 {showTrailerOverlay && ( 
                     <TrailerOverlay trailerKey={currentTrailerKey} isLoading={trailerLoading}  error={trailerError}
