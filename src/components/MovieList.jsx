@@ -1,227 +1,140 @@
-import React, { useEffect, useState } from 'react';
-import MovieCard from './MovieCard.jsx';
-import Modal from './Modal.jsx';
-import TrailerOverlay from './TrailerOverlay.jsx';
+import React, { useState } from 'react';
+import useMovies from './useMovies'; 
+import { fetchTrailer } from './fetchTrailer'; 
+import MovieCard from './MovieCard'; 
+import Modal from './Modal';
+import TrailerOverlay from './TrailerOverlay';
+import SearchBar from './searchBar'; 
+import SortControls from './sortControls'; 
+import ViewToggleButtons from './viewToggleButtons';
+import Sidebar from './Sidebar.jsx';
 import './MovieList.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
+import useSidebar from './useSidebar';
 
 const MovieList = () => {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeView, setActiveView] = useState('nowPlaying');
-  const [showModal, setShowModal] = useState(false); 
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [sortOrder, setSortOrder] = useState('popularity.desc');
-  const [showTrailerOverlay, setShowTrailerOverlay] = useState(false);
-  const [currentTrailerKey, setCurrentTrailerKey] = useState(null);
-  const [trailerLoading, setTrailerLoading] = useState(false);
-  const [trailerError, setTrailerError] = useState(null);
+    const api_key = import.meta.env.VITE_API_KEY;
+    const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar();
+    const [page, setPage] = useState(1);
+    const [searchInput, setSearchInput] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeView, setActiveView] = useState('nowPlaying');
+    const [sortOrder, setSortOrder] = useState('popularity.desc');
+    const [showModal, setShowModal] = useState(false);
+    const [selectedMovie, setSelectedMovie] = useState(null);
+    const [showTrailerOverlay, setShowTrailerOverlay] = useState(false);
+    const [currentTrailerKey, setCurrentTrailerKey] = useState(null);
+    const [trailerLoading, setTrailerLoading] = useState(false);
+    const [trailerError, setTrailerError] = useState(null);
+    const [likedMoviesIds, setLikedMoviesIds] = useState(() => JSON.parse(localStorage.getItem('likedMoviesIds')) || []);
+    const [watchedMoviesIds, setWatchedMoviesIds] = useState(() => JSON.parse(localStorage.getItem('watchedMoviesIds')) || []);
 
-
-  const api_key = import.meta.env.VITE_API_KEY;
-  const baseUrl = 'https://api.themoviedb.org/3';
-
-  useEffect(() => {
-    const fetchMovies = async () => {
-      setLoading(true);
-      setError(null);
-
-      let endpoint;
-      if (activeView === 'searchResults' && searchQuery.trim().length > 0) {
-        endpoint = `/search/movie?api_key=${api_key}&query=${encodeURIComponent(searchQuery)}&page=${page}`;
-      } else {
-        endpoint = `/discover/movie?api_key=${api_key}&sort_by=${sortOrder}&page=${page}&primary_release_date.lte=${new Date().toISOString().split('T')[0]}`;
-      }
-      const url = `${baseUrl}${endpoint}`;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error: ${response.status}`);
+    const toggleLikeMovie = (movie) => { 
+        const updatedLikes = likedMoviesIds.some(m => m.id === movie.id)
+            ? likedMoviesIds.filter(m => m.id !== movie.id)
+            : [...likedMoviesIds, movie]; 
+        setLikedMoviesIds(updatedLikes);
+        localStorage.setItem('likedMoviesIds', JSON.stringify(updatedLikes)); 
+    };
+    const toggleWatchedMovie = (movie) => { 
+        const updatedWatched = watchedMoviesIds.some(m => m.id === movie.id)
+            ? watchedMoviesIds.filter(m => m.id !== movie.id)
+            : [...watchedMoviesIds, movie];
+        setWatchedMoviesIds(updatedWatched);
+        localStorage.setItem('watchedMoviesIds', JSON.stringify(updatedWatched)); 
+    };
+    const handleRemoveFavorite = (movieId) => {
+        const updatedLikes = likedMoviesIds.filter(movie => movie.id !== movieId);
+        setLikedMoviesIds(updatedLikes);
+        localStorage.setItem('likedMoviesIds', JSON.stringify(updatedLikes));
+    };
+    const handleRemoveWatched = (movieId) => {
+        const updatedWatched = watchedMoviesIds.filter(movie => movie.id !== movieId);
+        setWatchedMoviesIds(updatedWatched);
+        localStorage.setItem('watchedMoviesIds', JSON.stringify(updatedWatched));
+    };
+    const { movies, loading, error, setMovies } = useMovies({
+        activeView, page, searchQuery, sortOrder, api_key
+    });
+    const handleSearch = () => {
+        setSearchQuery(searchInput.trim());
+        setActiveView('searchResults');
+        setPage(1);
+        setMovies([]);
+    };
+    const handleClearSearch = () => {
+        setSearchInput('');
+        setSearchQuery('');
+        setActiveView('nowPlaying');
+        setPage(1);
+        setMovies([]);
+    };
+    const handleMovieCardClick = (movie) => {
+        setSelectedMovie(movie);
+        setShowModal(true);
+    };
+    const handleWatchTrailerClick = async (movie) => {
+        setShowTrailerOverlay(true);
+        setTrailerLoading(true);
+        try {
+            const key = await fetchTrailer(movie.id, api_key);
+            if (key) {
+                setCurrentTrailerKey(key);
+            } else {
+                setTrailerError('No trailer found.');
+            }
+        } catch (err) {
+            setTrailerError(err.message);
+        } finally {
+            setTrailerLoading(false);
         }
-        const data = await response.json();
-        setMovies(prev => (page === 1 ? data.results : [...prev, ...data.results]));
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
     };
 
-    fetchMovies();
-  }, [page, searchQuery, activeView, api_key, sortOrder]);
-
-  const handleLoadMore = () => {
-    setPage(prev => prev + 1);
-  };
-  const handleSearchChange = (e) => {
-    setSearchInput(e.target.value);
-  };
-  const handleSearch = () => {
-    if (searchInput.trim() === '') {
-      setActiveView('nowPlaying');
-      setSearchQuery('');
-      setPage(1);
-      setMovies([]);
-      setSortOrder('popularity.desc');
-      return;
-    }
-    setActiveView('searchResults');
-    setSearchQuery(searchInput);
-    setPage(1);
-    setMovies([]);
-  };
-  const handleClearSearch = () => {
-    setSearchInput('');
-    setSearchQuery('');
-    setActiveView('nowPlaying');
-    setPage(1);
-    setMovies([]);
-    setSortOrder('popularity.desc');
-  };
-  const handleNowPlayingClick = () => {
-    setActiveView('nowPlaying');
-    setSearchQuery('');
-    setSearchInput('');
-    setPage(1);
-    setMovies([]);
-    setSortOrder('popularity.desc');
-  };
-  const handleSearchViewClick = () => {
-    setActiveView('searchResults');
-    if (searchQuery.trim() === '') {
-      setMovies([]);
-    }
-  };
-  const handleSortChange = (e) => {
-    setSortOrder(e.target.value);
-    setPage(1);
-    setMovies([]);
-  };
-  const handleMovieCardClick = (movie) => {
-    setSelectedMovie(movie);
-    setShowModal(true);
-  };
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedMovie(null);
-  };
-  const handleWatchTrailerClick = async (movie) => {
-    setShowTrailerOverlay(true); 
-    setTrailerLoading(true);
-    setTrailerError(null);
-    setCurrentTrailerKey(null);
-
-    try {
-      const response = await fetch(`${baseUrl}/movie/${movie.id}/videos?api_key=${api_key}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch trailers: ${response.status}`);
-      }
-      const data = await response.json();
-      const youtubeTrailers = data.results.filter(
-        video => video.site === 'YouTube' && video.type === 'Trailer'
-      );
-
-      let selectedTrailer = null;
-      if (youtubeTrailers.length > 0) {
-        selectedTrailer = youtubeTrailers.find(video =>
-          video.official === true && video.name.toLowerCase().includes('official trailer')
-        );
-        if (!selectedTrailer) {
-          selectedTrailer = youtubeTrailers.find(video => video.official === true);
-        }
-        if (!selectedTrailer) {
-          selectedTrailer = youtubeTrailers[0];
-        }
-      }
-
-      if (selectedTrailer) {
-        setCurrentTrailerKey(selectedTrailer.key);
-      } else {
-        setTrailerError('No YouTube trailer found for this movie.');
-      }
-    } catch (err) {
-      console.error("Error fetching trailer:", err);
-      setTrailerError(`Could not load trailer: ${err.message}`);
-    } finally {
-      setTrailerLoading(false);
-    }
-  };
-  const handleCloseTrailerOverlay = () => {
-    setShowTrailerOverlay(false);
-    setCurrentTrailerKey(null);
-    setTrailerError(null);
-    setTrailerLoading(false);
-  };
-
-
-  if (loading && movies.length === 0) return <p>Loading movies...</p>;
-  if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
-
-  return (
-    <main>
-      <div className="view-toggle-buttons">
-        <button className={activeView === 'nowPlaying' ? 'active' : ''} onClick={handleNowPlayingClick}> Now Playing </button>
-        <button className={activeView === 'searchResults' ? 'active' : ''} onClick={handleSearchViewClick} disabled={searchQuery.trim() === '' && activeView !== 'searchResults'}>
-          Search Results
-        </button>
-      </div>
-
-      <div className="search-and-sort-container">
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search movies..."
-            value={searchInput}
-            onChange={handleSearchChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSearch();
-              }
-            }}
-          />
-          <button onClick={handleSearch}>Search</button>
-          <button onClick={handleClearSearch} className="clear-button">Clear</button>
-        </div>
-
-        {activeView === 'nowPlaying' && (
-          <div className="sort-controls">
-            <label htmlFor="sort-by">Sort by:</label>
-            <select id="sort-by" value={sortOrder} onChange={handleSortChange}>
-              <option value="popularity.desc">Most Popular </option>
-              <option value="original_title.asc">Title (A-Z)</option>
-              <option value="release_date.desc">Most Recent</option>
-              <option value="vote_average.desc">Highest Rating</option>
-            </select>
-          </div>
-        )}
-      </div>
-
-      <div className="movie-grid">
-        {movies.length > 0 ? (
-          movies.map(movie => (
-            <MovieCard key={movie.id} movie={movie} onClick={handleMovieCardClick} onWatchTrailerClick={handleWatchTrailerClick} />
-          ))
-        ) : (
-          <p> {loading ? "Loading..." : (activeView === 'searchResults' && searchQuery.trim() === '' ? "Enter a search term to find movies." : "No movies found.")}</p>
-        )}
-      </div>
-
-      {(activeView === 'nowPlaying' || (activeView === 'searchResults' && movies.length > 0)) && (
-        <div className="load-more-container">
-          <button className="load-more-button" onClick={handleLoadMore} disabled={loading}> {loading ? 'Loading...' : 'Load More'} </button>
-        </div>
-      )}
-      {showModal && selectedMovie && (
-        <Modal movie={selectedMovie} onClose={handleCloseModal} api_key={api_key} />
-      )}
-      {showTrailerOverlay && (
-        <TrailerOverlay trailerKey={currentTrailerKey} isLoading={trailerLoading} error={trailerError} onClose={handleCloseTrailerOverlay} />
-      )}
-    </main>
-  );
+    return (
+        <main>
+            <div className={`app-container ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+                <button className="sidebar-toggle-btn" onClick={toggleSidebar} aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}>
+                    <FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} />
+                </button>
+                <ViewToggleButtons activeView={activeView} setActiveView={setActiveView} setPage={setPage} setMovies={setMovies} />
+                <div className="search-and-sort-container">
+                    <SearchBar searchInput={searchInput} onChange={e => setSearchInput(e.target.value)} onSearch={handleSearch} onClear={handleClearSearch} />
+                    {activeView === 'nowPlaying' && (
+                        <SortControls sortOrder={sortOrder} onChange={e => { setSortOrder(e.target.value); setPage(1); setMovies([]); }} />
+                    )}
+                </div>
+                {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+                <div className="movie-grid">
+                    {movies.length > 0 ? (
+                        movies.map(movie => (
+                            <MovieCard key={movie.id} movie={movie} onClick={handleMovieCardClick} onWatchTrailerClick={handleWatchTrailerClick} onToggleLike={() => toggleLikeMovie(movie)} onToggleWatched={() => toggleWatchedMovie(movie)} isLiked={likedMoviesIds.some(m => m.id === movie.id)} isWatched={watchedMoviesIds.some(m => m.id === movie.id)} />
+                        ))) : ( <p>{loading ? 'Loading...' : 'No movies found.'}</p>
+                    )}
+                </div>
+                {(movies.length > 0 || loading) && (
+                    <div className="load-more-container">
+                        <button onClick={() => setPage(p => p + 1)} disabled={loading}>
+                            {loading ? 'Loading...' : 'Load More'}
+                        </button>
+                    </div>
+                )}
+                {showModal && selectedMovie && (
+                    <Modal movie={selectedMovie} onClose={() => setShowModal(false)} api_key={api_key} />
+                )}
+                {showTrailerOverlay && ( 
+                    <TrailerOverlay trailerKey={currentTrailerKey} isLoading={trailerLoading}  error={trailerError}
+                        onClose={() => {
+                            setShowTrailerOverlay(false);
+                            setCurrentTrailerKey(null);
+                            setTrailerError(null);
+                        }}
+                    />
+                )}
+                <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} watchedMovies={watchedMoviesIds} favoritedMovies={likedMoviesIds} onRemoveFavorite={handleRemoveFavorite} onRemoveWatched={handleRemoveWatched}/>
+            </div>
+        </main>
+    );
 };
 
 export default MovieList;

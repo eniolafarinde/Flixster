@@ -38,7 +38,7 @@
   font-size: 2em;
   color: #333;
   cursor: pointer;
-  z-index: 1001; /* Ensure button is on top */
+  z-index: 1001;
   padding: 5px 10px;
 }
 
@@ -54,12 +54,12 @@
 }
 
 .modal-poster {
-  width: 180px; /* Slightly larger poster for better focus */
+  width: 180px;
   height: auto;
   border-radius: 8px;
-  margin-right: 25px; /* Increased margin */
+  margin-right: 25px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  flex-shrink: 0; /* Prevent it from shrinking */
+  flex-shrink: 0;
 }
 
 .modal-info {
@@ -70,17 +70,16 @@
 
 .modal-info h2 {
   margin-top: 0;
-  font-size: 2.2em; /* Slightly larger title */
+  font-size: 2.2em; 
   color: #000;
-  margin-bottom: 15px; /* Added margin */
+  margin-bottom: 15px; 
 }
 
 .modal-info p {
-  margin-bottom: 10px; /* Adjusted margin */
+  margin-bottom: 10px; 
   line-height: 1.6;
 }
 
-/* Animations (remain the same) */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -98,15 +97,15 @@
   }
 
   .modal-details {
-    flex-direction: column; /* Stack poster and info */
+    flex-direction: column; 
     align-items: center;
     text-align: center;
   }
 
   .modal-poster {
     margin-right: 0;
-    margin-bottom: 20px; /* Increased margin-bottom when stacked */
-    width: 150px; /* Adjust poster size for small screens */
+    margin-bottom: 20px;
+    width: 150px;
   }
 
   .modal-info h2 {
@@ -126,6 +125,6 @@
 
 @media (max-width: 400px) {
   .modal-content {
-    width: 95%; /* Wider on very small screens */
+    width: 95%;
   }
 }

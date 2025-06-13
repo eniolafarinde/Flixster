@@ -1,8 +1,8 @@
 import React from 'react';
-import './Modal.css'; // We'll create this CSS too
+import './Modal.css'; 
 
 const Modal = ({ movie, onClose }) => {
-  if (!movie) return null; // Don't render if no movie is selected
+  if (!movie) return null; 
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`

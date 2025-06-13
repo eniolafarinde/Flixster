@@ -105,7 +105,7 @@
   margin-bottom: 20px;
 }
 
-.load-more-button {
+.load-more-container button {
   padding: 12px 25px;
   background-color: #3365fa;
   color: white;
@@ -117,51 +117,81 @@
   font-family: 'Montserrat', sans-serif;
 }
 
-.load-more-button:hover {
+.load-more-container button:hover {
   background-color: #2a52d0;
 }
 
 .search-and-sort-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; 
-    align-items: center;
-    margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; 
+  align-items: center;
+  margin-bottom: 30px;
 }
 
 .sort-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .sort-controls label {
-    font-size: 16px;
-    font-weight: bold;
-    color: #555;
+  font-size: 16px;
+  font-weight: bold;
+  color: #555;
 }
 
 .sort-controls select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    background-color: #f9f9f9;
-    cursor: pointer;
-    outline: none;
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 12px;
-    font-family: 'Montserrat', sans-serif;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  outline: none;
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .sort-controls select:hover {
-    border-color: #3365fa;
+  border-color: #3365fa;
 }
 
 .sort-controls select:focus {
-    border-color: #3365fa;
-    box-shadow: 0 0 0 2px rgba(51, 101, 250, 0.2);
+  border-color: #3365fa;
+  box-shadow: 0 0 0 2px rgba(51, 101, 250, 0.2);
+}
+
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100; 
+  background-color: #3365fa;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5em;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: #3365fa;
+  transform: scale(1.05);
+}
+
+.app-container.sidebar-open {
+  margin-left: 300px; 
+  transition: margin-left 0.3s ease-in-out;
 }
 
 
